@@ -1,0 +1,221 @@
+{
+	"compiler": {
+		"version": "0.8.18+commit.87f61d96"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "newEndTime",
+						"type": "uint256"
+					}
+				],
+				"name": "AuctionExtended",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "winner",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "FinalWinner",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "bidder",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "NewHighestBid",
+				"type": "event"
+			},
+			{
+				"inputs": [],
+				"name": "bid",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "claim",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "partialClaim",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "refund",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "showOffers",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "bider",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "value",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "idOffer",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "offerReclaimed",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct Auction.Biders[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "showWinner",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "bider",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "value",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "idOffer",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "offerReclaimed",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct Auction.Biders",
+						"name": "",
+						"type": "tuple"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"details": "Implements a bidding auction with refund and claim mechanisms.",
+			"kind": "dev",
+			"methods": {},
+			"title": "Auction",
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {
+				"bid()": {
+					"notice": "Allows users to place a bid higher than the current one"
+				},
+				"claim()": {
+					"notice": "Allows a bidder to claim their refund"
+				},
+				"partialClaim()": {
+					"notice": "Allows partial claim of non-winning offers during active auction"
+				},
+				"refund()": {
+					"notice": "Owner can refund the losing bidders and collect the fee after auction ends"
+				},
+				"showOffers()": {
+					"notice": "Returns the full list of bids"
+				},
+				"showWinner()": {
+					"notice": "Returns the current highest bidder and value"
+				}
+			},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"Auction.sol": "Auction"
+		},
+		"evmVersion": "paris",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"Auction.sol": {
+			"keccak256": "0x8e76076c90ddf9f5aa2570a93691b43a4b93acf48f3ab9430d978af97c9a05ed",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://8abb7ecc58a7c6876ced7196c91b623d83a0350e772f602ae389fb0ffde286ef",
+				"dweb:/ipfs/QmcQgdrw38NxwxTUU9kgypEWYeWjAotyHwHbD4gs9iymhe"
+			]
+		}
+	},
+	"version": 1
+}
