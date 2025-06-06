@@ -1,99 +1,41 @@
+# 🧾 Auction Smart Contract 
 
-🧾 Auction Smart Contract 
-This repository contains a decentralized auction smart contract developed in Solidity as part of the final project for Module 2 of the blockchain development course.
+This repository contains a smart contract for a decentralized auction system written in Solidity. It was developed as the final project of Module 2 in the smart contracts course.
 
-📍 Overview
-The smart contract enables a transparent and fair auction system where multiple users can place bids for an item. It enforces strict bidding rules, manages deposits securely, and ensures proper refunds and timing mechanisms for a fair process.
+## 📍 Overview
 
-⚙️ Features
-Feature	Status
-Auction initialized on deployment	✅
-Bidding function (must exceed previous bid by at least 5%)	✅
-Display current highest bidder	✅
-View list of all bids	✅
-Refunds to non-winning bidders with 2% fee	✅
-Funds linked to bidder addresses	✅
-Event: New bid placed	✅
-Event: Auction ended	✅
-Partial refund of previous bids during the auction	✅
-Auto-extension if a valid bid is placed in the last 10 minutes	✅
-Access and time control via modifiers	✅
-Deployed and verified on Sepolia network	✅
+The contract manages a transparent and fair auction where multiple users can place bids on an item. It ensures fair competition, secure fund handling, and dynamic time management.
 
-🛠️ Functionalities
-🧱 Constructor
-Automatically initializes the auction with:
+## 🛠️ Key Features
 
-Start time
+- Automatic auction initialization upon deployment.
+- Bid reception with a required minimum increase of 5% over the current highest bid.
+- Automatic refunds (with a 2% fee) to non-winning bidders when the auction ends.
+- Partial refund claims for previous bids during the ongoing auction.
+- Automatic auction time extension if a valid bid is placed within the last 10 minutes.
+- Display of the current highest bidder and a full list of all bids.
 
-End time (7 days from deployment)
+## ✅ Implemented Features
 
-Owner address
+| Feature                                              | Status |
+|------------------------------------------------------|--------|
+| Constructor initializes the auction                  | ✅     |
+| Bidding function enforces +5% minimum increase       | ✅     |
+| Winner and winning bid display                       | ✅     |
+| Retrieval of all submitted bids                      | ✅     |
+| Refunds to non-winners with 2% fee                   | ✅     |
+| Deposit tracking by address                          | ✅     |
+| Events for new bids and auction end                  | ✅     |
+| Partial refunds allowed during the auction           | ✅     |
+| Auto-extension of auction time                       | ✅     |
+| Use of modifiers for time and access control         | ✅     |
+| Deployed and verified on Sepolia testnet             | ✅     |
 
-💰 bid()
-Allows users to place bids.
+## 🚀 Deployment Details
 
-A valid bid must:
+- **Network**: Sepolia  tesnet
+- **Contract Address**: 0xd4B2431cc892303F4f069C6Ab3303185Cec48a66
+- **Verification**: ✅ Code verified on Etherscan
 
-Be higher than the current winning bid by at least 5%.
 
-Be submitted before the auction ends.
-
-If a valid bid is placed in the last 10 minutes, the auction is extended by that amount.
-
-🥇 showWinner()
-Returns the current highest bidder and bid amount.
-
-📜 showOffers()
-Returns the full list of bidders and their bids.
-
-💸 refund()
-Can be called by the owner after the auction ends.
-
-Refunds all non-winning bidders (minus a 2% fee).
-
-Sends accumulated fee to the contract owner.
-
-🔁 partialClaim()
-Allows users to partially reclaim previous non-winning bids during the auction.
-
-📤 claim()
-After the auction ends, users can claim their remaining refundable amount.
-
-🔐 Data Structures
-
-struct Biders {
-    address bider;
-    uint256 value;
-    uint256 idOffer;
-    bool offerReclaimed;
-}
-Each bid is recorded with:
-
-The bidder’s address
-
-The bid value
-
-A unique identifier
-
-Whether the bid was already partially reclaimed
-
-🧠 Contract Design Highlights
-Security: Uses require validations, onlyOwner modifier, and secure refund mechanisms.
-
-Fair Bidding Rules: Enforces minimum increments and auction timing logic.
-
-Gas Efficiency: Minimal storage duplication and linear data structures.
-
-Transparency: Emits events for new bids and auction finalization.
-
-🧪 Deployment Details
-Network: Sepolia
-
-Contract Address: 0x123...abc (Replace with actual address)
-
-Etherscan Verification: ✅ Source code publicly verified
-
-📄 License
-This project is licensed under the MIT License. See the LICENSE file for details.
 
