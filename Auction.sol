@@ -12,8 +12,6 @@ contract Auction {
     struct Biders {
         address bider;
         uint256 value;
-        uint256 idOffer;
-        bool offerReclaimed;
     }
 
     // === State Variables ===
@@ -28,47 +26,70 @@ contract Auction {
     uint256 private constant REFACTOR = 100;
     uint256 private constant TIME_EXTENSION = 10 minutes; 
     uint256 private feeOwner;
-    uint256 private partialClaims;
     uint256 private endTime;
 
-    mapping(address => uint256) private numOffer; 
-    mapping(address => uint256) private claims;
+
+    mapping(address => uint256) private balance;
 
     // === Events ===
     event NewHighestBid(address indexed bidder, uint256 amount);
     event AuctionExtended(uint256 newEndTime); 
     event FinalWinner(address indexed winner, uint256 amount); 
+    event PartialRefund(address indexed winner, uint256 amount);
 
     // === Constructor ===
+
+    /**
+     * @dev Initializes the auction contract and sets the owner and end time.
+     */
     constructor() {
         owner = msg.sender;
         startTime = block.timestamp;
         endTime = startTime + AUCTIONDURATION;
     }
 
-  
-
     // === Modifiers ===
+
+    /**
+     * @dev Ensures the auction is still ongoing.
+     */
     modifier isActive() {
         require(block.timestamp < endTime, "Bid finished");
         _;
     }
 
+    /**
+     * @dev Ensures the auction has ended.
+     */
     modifier isFinished() {
         require(block.timestamp > endTime, "Bid not finished yet");
         _;
     }
 
+    /**
+     * @dev Restricts function access to the contract owner.
+     */
     modifier onlyOwner() {
         require(owner == msg.sender, "Only the owner can run this function");
         _;
     }
 
+    /**
+     * @dev Ensures the caller has a refundable balance.
+     */
+    modifier canRefund() {
+        require(balance[msg.sender] > 0, "Nothing to withdraw");
+        _;
+    }
+
     // === External Functions ===
 
-    /// @notice Allows users to place a bid higher than the current one
+    /**
+     * @notice Allows users to place a new bid that is at least 5% higher than the current winning bid.
+     * @dev Updates the winner - stores the bid
+     * @dev Extend 10 minutes the auction if the new winner appears when the leftime is low than 10 minutes.
+     */
     function bid() external payable isActive {
-        require(msg.value > 0, "Bid must be greater than zero"); 
         require(msg.sender != address(0), "Invalid sender address"); 
 
         uint256 value = msg.value;
@@ -76,11 +97,11 @@ contract Auction {
         uint256 offerWinning = _checkOffer(winner.value);
 
         if (value > offerWinning) {
-            numOffer[sender]++;
             winner.value = value;
             winner.bider = sender;
 
-            biders.push(Biders(sender, value, numOffer[sender], false));
+            biders.push(Biders(sender, value));
+            balance[sender] += value;
 
             emit NewHighestBid(sender, value); 
 
@@ -88,77 +109,86 @@ contract Auction {
             if (timeLeft <= TIME_EXTENSION) {
                 endTime += timeLeft;
                 emit AuctionExtended(endTime); 
+            }
         }
-        }
-
-        
     }
 
-    /// @notice Owner can refund the losing bidders and collect the fee after auction ends
-    function refund() external onlyOwner isFinished {
+    /**
+     * @notice Ends the auction, refunds losing bidders, and sends the fee to the owner.
+     * @dev The owner collects a fee from each bid. Losers are refunded their balance minus the fee.
+     */
+    function refund() external onlyOwner  isFinished {
         uint256 lengthOffers = biders.length;
 
         for (uint256 i = 0; i < lengthOffers; i++) {
+            uint256 fee = _checkFee(biders[i].value);
+            feeOwner += fee;
             if (winner.bider == biders[i].bider && winner.value == biders[i].value) {
-                feeOwner += _checkFee(biders[i].value);
-            } else if (!biders[i].offerReclaimed) {
-                feeOwner += _checkFee(biders[i].value);
-                biders[i].value -= _checkFee(biders[i].value);
-                claims[biders[i].bider] += biders[i].value;
+                balance[biders[i].bider] = 0;
+            } else {
+                if (balance[biders[i].bider] > 0) {
+                    (bool sentToBidder, ) = payable(biders[i].bider).call{value: balance[biders[i].bider]}("");
+                    require(sentToBidder, "Transfer Failed");
+                    balance[biders[i].bider] = 0;
+                }
             }
         }
 
-        (bool success, ) = payable(owner).call{value: feeOwner}("");
-        require(success, "Transfer Failed");
+        (bool sentToOwner, ) = payable(owner).call{value: feeOwner}("");
+        require(sentToOwner, "Transfer Failed");
 
         emit FinalWinner(winner.bider, winner.value); 
     }
 
-    /// @notice Allows a bidder to claim their refund
-    function claim() external isFinished {
-        require(claims[msg.sender] > 0, "No funds to claim"); 
-        uint256 amount = claims[msg.sender];
-        claims[msg.sender] = 0; 
-        (bool success, ) = payable(msg.sender).call{value: amount}("");
-        require(success, "Transfer Failed");
-    }
-
-    /// @notice Allows partial claim of non-winning offers during active auction
-    function partialClaim() external isActive {
-        uint256 bidersLength = biders.length;
-        for (uint256 i = 0; i < bidersLength; i++) {
-            if (winner.bider == biders[i].bider && winner.value == biders[i].value) {
-                continue;
-            } else if (!biders[i].offerReclaimed) {
-                biders[i].offerReclaimed = true;
-                partialClaims += biders[i].value;
-            }
+    /**
+     * @notice Allows a bidder to withdraw part of their balance during the auction.
+     * @dev If the bidder is currently winning, only the non-winning part is withdrawable.
+     */
+    function partialRefund() external isActive canRefund {
+        if (winner.bider == msg.sender) {
+            balance[msg.sender] -= winner.value;
         }
 
-        uint256 amount = partialClaims;
-        partialClaims = 0; 
-        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        uint256 withdraw = balance[msg.sender];
+        balance[msg.sender] = 0;
+        (bool success, ) = payable(msg.sender).call{value: withdraw}("");
         require(success, "Transfer Failed");
+
+        emit PartialRefund(msg.sender, withdraw);
     }
 
-    /// @notice Returns the current highest bidder and value
+    /**
+     * @notice Returns the current highest bidder and their bid.
+     * @return A struct containing the address and bid amount of the current winner.
+     */
     function showWinner() external view returns (Biders memory) {
         return winner;
     }
 
-    /// @notice Returns the full list of bids
+    /**
+     * @notice Returns all submitted bids.
+     * @return An array of structs with each bidder and their respective bid.
+     */
     function showOffers() external view returns (Biders[] memory) {
         return biders;
     }
 
     // === Internal Functions ===
 
-    /// @dev Calculates the minimum value to beat the last offer
+    /**
+     * @dev Calculates the minimum value required to outbid the current winner.
+     * @param lastOffer The previous highest bid.
+     * @return offerChecked The new minimum valid bid.
+     */
     function _checkOffer(uint256 lastOffer) private pure returns (uint256 offerChecked) {
         offerChecked = (lastOffer * MIN_BID_INCREMENT_PERCENT) / REFACTOR;
     }
 
-    /// @dev Calculates fee from a bid
+    /**
+     * @dev Calculates the fee to be collected from a bid.
+     * @param biderValue The amount bid by a user.
+     * @return fee The calculated fee amount.
+     */
     function _checkFee(uint256 biderValue) private pure returns (uint256 fee) {
         fee = (biderValue * FEE_PERCENT) / REFACTOR;
     }
