@@ -2,6 +2,33 @@
 
 pragma solidity >0.8.0;
 
+
+/* Devolucion softline:
+1- claim() => no solicitado.
+ 
+ Correccion: Borre la funcion y puse la logica de devolucion dentro del refund
+
+2- Comentarios y documentacion de las funciones incompleto.
+
+ Correccion: Aumente la documentación de las funciones no sé si es suficiente
+
+3- Haces checkeos redundantes que podrías omitir.
+
+ Correcion: Borre requires innecesarios de la funcion bid y otros se fueron al sacar la funcion claim
+
+4- La implementación de eventos está presente, pero sería recomendable 
+  incluir un evento para el reclamo de dinero, lo que ayudaría a comunicar el estado
+  de la subasta de manera más efectiva
+
+    Correcion: El evento fue colocado al final de partialRefund
+
+5- No se están utilizando modificadores donde podrían ser convenientes. 
+  Por ejemplo, podrías implementar un modificador para verificar si el usuario 
+  tiene fondos disponibles antes de reclamar.
+
+    Correccion: Agregue el modifir "canRefund"
+
+
 /**
  * @title Auction
  * @dev Implements a bidding auction with refund and claim mechanisms.
@@ -115,7 +142,8 @@ contract Auction {
 
     /**
      * @notice Ends the auction, refunds losing bidders, and sends the fee to the owner.
-     * @dev The owner collects a fee from each bid. Losers are refunded their balance minus the fee.
+     * @dev The owner collects a fee from each bid. 
+     * @dev Losers are refunded their balance minus the fee.
      */
     function refund() external onlyOwner  isFinished {
         uint256 lengthOffers = biders.length;
